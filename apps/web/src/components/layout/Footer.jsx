@@ -38,9 +38,10 @@ export function Footer({ settings }) {
           </div>
         </div>
 
-       <p className="mt-10 border-t border-border pt-6 text-xs text-ink-soft">
-  © {year} {siteName}. A product by AlignCraft. All listings are subject to verification before final sale.
-</p>
+       <div className="mt-10 flex flex-col gap-2 border-t border-border pt-6 text-xs text-ink-soft sm:flex-row sm:items-center sm:justify-between">
+  <p>© {year} {siteName}. A product by AlignCraft.</p>
+  <p>All listings are subject to verification before final sale.</p>
+</div>
       </div>
     </footer>
   );
