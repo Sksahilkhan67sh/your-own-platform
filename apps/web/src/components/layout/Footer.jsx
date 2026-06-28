@@ -49,7 +49,7 @@ export function Footer({ settings }) {
         <div className="mt-10 flex flex-col gap-2 border-t border-border pt-6 text-xs text-ink-soft sm:flex-row sm:items-start sm:justify-between">
           <p>
             © {year} {siteName}.<br />
-            A product by AlignCraft.
+            Built by AlignCraft.
           </p>
           <p>All listings are subject to verification before final sale.</p>
         </div>
