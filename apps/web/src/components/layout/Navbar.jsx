@@ -12,7 +12,7 @@ export function Navbar({ siteName = 'YOUR OWN' }) {
       <div className="mx-auto flex max-w-content items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex flex-col leading-tight">
   <span className="font-display text-xl tracking-tight text-ink">{siteName}</span>
-  <span className="text-xs text-ink-soft">a product by AlignCraft</span>
+  <span className="text-xs text-ink-soft">Built by AlignCraft.</span>
         </Link>
 
         <nav className="hidden items-center gap-8 sm:flex" aria-label="Primary">
