@@ -21,6 +21,7 @@ export function Footer({ settings }) {
               <Link to="/lands" className="text-sm text-ink hover:text-accent">Browse Lands</Link>
               <Link to="/about" className="text-sm text-ink hover:text-accent">About</Link>
               <Link to="/contact" className="text-sm text-ink hover:text-accent">Contact</Link>
+              <Link to="/terms" className="text-sm text-ink hover:text-accent">Terms & Conditions</Link>
             </nav>
           </div>
 
