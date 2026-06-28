@@ -10,6 +10,7 @@ import { BrowseLandsPage } from './pages/public/BrowseLandsPage.jsx';
 import { LandDetailsPage } from './pages/public/LandDetailsPage.jsx';
 import { AboutPage } from './pages/public/AboutPage.jsx';
 import { ContactPage } from './pages/public/ContactPage.jsx';
+import { TermsPage } from './pages/public/TermsPage.jsx';
 import { NotFoundPage } from './pages/public/NotFoundPage.jsx';
 
 import { AdminLoginPage } from './pages/admin/AdminLoginPage.jsx';
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/lands/:slug" element={<LandDetailsPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 
