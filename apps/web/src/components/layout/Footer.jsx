@@ -27,21 +27,32 @@ export function Footer({ settings }) {
           <div>
             <p className="text-sm font-medium uppercase tracking-wide text-ink-soft">Get in touch</p>
             <div className="mt-3 flex flex-col gap-2 text-sm text-ink">
-              {settings?.contactEmail && <a href={`mailto:${settings.contactEmail}`} className="hover:text-accent">{settings.contactEmail}</a>}
+              {settings?.contactEmail && (
+                <a href={`mailto:${settings.contactEmail}`} className="hover:text-accent">
+                  {settings.contactEmail}
+                </a>
+              )}
               {settings?.socialLinks?.instagram && (
-                <a href={settings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-accent">Instagram</a>
+                <a href={settings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+                  Instagram
+                </a>
               )}
               {settings?.socialLinks?.facebook && (
-                <a href={settings.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-accent">Facebook</a>
+                <a href={settings.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+                  Facebook
+                </a>
               )}
             </div>
           </div>
         </div>
 
-       <div className="mt-10 flex flex-col gap-2 border-t border-border pt-6 text-xs text-ink-soft sm:flex-row sm:items-center sm:justify-between">
-  <p>© {year} {siteName}. A product by AlignCraft.</p>
-  <p>All listings are subject to verification before final sale.</p>
-</div>
+        <div className="mt-10 flex flex-col gap-2 border-t border-border pt-6 text-xs text-ink-soft sm:flex-row sm:items-start sm:justify-between">
+          <p>
+            © {year} {siteName}.<br />
+            A product by AlignCraft.
+          </p>
+          <p>All listings are subject to verification before final sale.</p>
+        </div>
       </div>
     </footer>
   );
