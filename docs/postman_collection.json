@@ -1,0 +1,269 @@
+{
+  "info": {
+    "name": "YOUR OWN — Land Listing Platform API",
+    "description": "Full API reference for the YOUR OWN backend. Set the baseUrl variable, run Login, then accessToken auto-populates for subsequent admin requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api/v1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "landId", "value": "" },
+    { "key": "landSlug", "value": "" },
+    { "key": "imageId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data && body.data.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', body.data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@your-own.com\",\n  \"password\": \"ChangeMe_StrongPassword123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh token",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/refresh" }
+        },
+        {
+          "name": "Logout",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/logout" }
+        },
+        {
+          "name": "Current user (me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public Listings",
+      "item": [
+        {
+          "name": "List lands (with filters)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/lands?status=available&sort=newest&page=1&limit=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["lands"],
+              "query": [
+                { "key": "status", "value": "available" },
+                { "key": "sort", "value": "newest" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get land by slug",
+          "request": { "method": "GET", "url": "{{baseUrl}}/lands/{{landSlug}}" }
+        },
+        {
+          "name": "Public settings",
+          "request": { "method": "GET", "url": "{{baseUrl}}/settings/public" }
+        },
+        {
+          "name": "Log inquiry (WhatsApp click)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/inquiries",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"landId\": \"{{landId}}\",\n  \"messagePreview\": \"Want to Buy — sample listing\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Listings",
+      "item": [
+        {
+          "name": "List all listings (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/lands"
+          }
+        },
+        {
+          "name": "Create listing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data && body.data._id) {",
+                  "  pm.collectionVariables.set('landId', body.data._id);",
+                  "  pm.collectionVariables.set('landSlug', body.data.slug);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/admin/lands",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"2 Acre Riverside Farmland\",\n  \"description\": \"A quiet, well-irrigated plot bordering a seasonal stream.\",\n  \"price\": 8500000,\n  \"areaValue\": 2,\n  \"areaUnit\": \"acre\",\n  \"address\": \"Survey No. 142, Off Mysuru Road\",\n  \"city\": \"Mysuru\",\n  \"state\": \"Karnataka\",\n  \"status\": \"available\",\n  \"featured\": true,\n  \"highlights\": [\"Borewell on site\", \"Clear title\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Get listing by id (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/lands/{{landId}}"
+          }
+        },
+        {
+          "name": "Update listing",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/admin/lands/{{landId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"pending\"\n}" }
+          }
+        },
+        {
+          "name": "Delete listing",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/lands/{{landId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Images",
+      "item": [
+        {
+          "name": "Presign image uploads",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/admin/lands/{{landId}}/images/presign",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"files\": [\n    { \"fileName\": \"plot-1.jpg\", \"contentType\": \"image/jpeg\", \"fileSizeBytes\": 2456789 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Confirm uploaded image",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/admin/lands/{{landId}}/images/confirm",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storageKey\": \"lands/{{landId}}/example.jpg\",\n  \"imageUrl\": \"https://your-bucket.s3.amazonaws.com/lands/{{landId}}/example.jpg\",\n  \"altText\": \"\",\n  \"width\": 1600,\n  \"height\": 1200\n}"
+            }
+          }
+        },
+        {
+          "name": "Reorder images",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/admin/lands/{{landId}}/images/reorder",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order\": [\n    { \"imageId\": \"{{imageId}}\", \"sortOrder\": 0 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete image",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/lands/{{landId}}/images/{{imageId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Settings",
+      "item": [
+        {
+          "name": "Get settings (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/settings"
+          }
+        },
+        {
+          "name": "Update settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/admin/settings",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"siteName\": \"YOUR OWN\",\n  \"defaultWhatsappNumber\": \"919876543210\",\n  \"contactEmail\": \"hello@your-own.com\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

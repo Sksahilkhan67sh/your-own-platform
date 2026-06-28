@@ -1,0 +1,58 @@
+version: '3.9'
+
+# Local development stack. Production deploys the api and web Dockerfiles
+# separately to Render/Railway and Vercel respectively — see docs/DEPLOYMENT.md.
+# This compose file exists to run the FULL stack locally with one command,
+# including a real MongoDB, without needing Atlas for day-to-day development.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '5000:5000'
+    env_file:
+      - apps/api/.env
+    environment:
+      # Override MONGODB_URI to point at the compose-network mongo service,
+      # regardless of what's in .env (which is meant for Atlas in
+      # production). 'mongo' resolves via Docker's internal DNS.
+      - MONGODB_URI=mongodb://mongo:27017/your-own
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://localhost:5000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:5000/api/v1
+    restart: unless-stopped
+    ports:
+      - '5173:80'
+    depends_on:
+      - api
+
+volumes:
+  mongo-data:
