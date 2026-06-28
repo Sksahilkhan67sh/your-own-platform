@@ -14,7 +14,7 @@ export function AdminSidebar() {
     <aside className="flex h-full w-64 flex-shrink-0 flex-col justify-between border-r border-border bg-surface-alt p-6">
       <div>
         <p className="font-display text-lg text-ink">YOUR OWN</p>
-<p className="mt-0.5 text-xs text-ink-soft">a product by AlignCraft</p>
+<p className="mt-0.5 text-xs text-ink-soft">Built by AlignCraft.</p>
 <p className="mt-2 text-xs uppercase tracking-wide text-ink-soft">Admin Panel</p>
 
         <nav className="mt-8 flex flex-col gap-1">
