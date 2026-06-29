@@ -37,6 +37,8 @@ if (process.env.NODE_ENV === 'production' && process.env.JWT_ACCESS_SECRET.lengt
 }
 
 export const env = {
+  RESEND_API_KEY: process.env.RESEND_API_KEY || undefined,
+  EMAIL_FROM: process.env.EMAIL_FROM || 'onboarding@resend.dev',
   NODE_ENV: process.env.NODE_ENV || 'development',
   isProduction: process.env.NODE_ENV === 'production',
   PORT: Number(process.env.PORT) || 5000,
