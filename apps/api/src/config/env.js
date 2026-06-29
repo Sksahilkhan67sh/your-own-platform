@@ -37,8 +37,6 @@ if (process.env.NODE_ENV === 'production' && process.env.JWT_ACCESS_SECRET.lengt
 }
 
 export const env = {
-  RESEND_API_KEY: process.env.RESEND_API_KEY || undefined,
-  EMAIL_FROM: process.env.EMAIL_FROM || 'onboarding@resend.dev',
   NODE_ENV: process.env.NODE_ENV || 'development',
   isProduction: process.env.NODE_ENV === 'production',
   PORT: Number(process.env.PORT) || 5000,
@@ -61,6 +59,9 @@ export const env = {
   S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
   S3_PUBLIC_BASE_URL: process.env.S3_PUBLIC_BASE_URL,
   S3_ENDPOINT: process.env.S3_ENDPOINT || undefined,
+
+  RESEND_API_KEY: process.env.RESEND_API_KEY || undefined,
+  EMAIL_FROM: process.env.EMAIL_FROM || 'onboarding@resend.dev',
 
   SEED_ADMIN_NAME: process.env.SEED_ADMIN_NAME || 'Admin',
   SEED_ADMIN_EMAIL: process.env.SEED_ADMIN_EMAIL,
