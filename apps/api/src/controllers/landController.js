@@ -4,6 +4,8 @@ import * as landService from '../services/landService.js';
 import * as s3Service from '../services/s3Service.js';
 import { Inquiry } from '../models/Inquiry.js';
 import { ApiError } from '../utils/ApiError.js';
+import { sendInquiryNotification } from '../services/emailService.js';
+import { getSettings } from '../services/settingsService.js';
 
 // ---------- Public ----------
 
@@ -28,6 +30,23 @@ export const createInquiry = asyncHandler(async (req, res) => {
   }
 
   await Inquiry.create({ land: landId, messagePreview });
+
+  // Best-effort notification — runs in the background, never blocks or
+  // fails the actual inquiry log, and never delays the response sent back
+  // to the buyer's browser (which is waiting to redirect to WhatsApp).
+  getSettings()
+    .then((settings) => {
+      if (settings.contactEmail) {
+        sendInquiryNotification({
+          adminEmail: settings.contactEmail,
+          landTitle: land.land.title,
+          landSlug: land.land.slug,
+          messagePreview,
+        });
+      }
+    })
+    .catch(() => null);
+
   sendSuccess(res, { statusCode: 201, data: { logged: true } });
 });
 
