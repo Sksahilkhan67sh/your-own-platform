@@ -5,6 +5,7 @@ import { fetchAdminLands } from '../../lib/landApi.js';
 
 export function AdminDashboardPage() {
   const [summary, setSummary] = useState(null);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -12,14 +13,16 @@ export function AdminDashboardPage() {
       fetchAdminLands({ status: 'available', limit: 1 }),
       fetchAdminLands({ status: 'pending', limit: 1 }),
       fetchAdminLands({ status: 'sold', limit: 1 }),
-    ]).then(([all, available, pending, sold]) => {
-      setSummary({
-        total: all.meta.total,
-        available: available.meta.total,
-        pending: pending.meta.total,
-        sold: sold.meta.total,
-      });
-    });
+    ])
+      .then(([all, available, pending, sold]) => {
+        setSummary({
+          total: all.meta.total,
+          available: available.meta.total,
+          pending: pending.meta.total,
+          sold: sold.meta.total,
+        });
+      })
+      .catch(() => setLoadError(true));
   }, []);
 
   return (
@@ -37,6 +40,10 @@ export function AdminDashboardPage() {
         <SummaryCard label="Under negotiation" value={summary?.pending} accentClass="text-status-pending" />
         <SummaryCard label="Sold" value={summary?.sold} accentClass="text-status-sold" />
       </div>
+
+      {loadError && (
+        <p className="mt-4 text-sm text-danger">Could not load listing summary. Try refreshing the page.</p>
+      )}
 
       <div className="mt-10 rounded-card border border-border bg-surface p-6">
         <h2 className="font-display text-lg text-ink">Quick actions</h2>
