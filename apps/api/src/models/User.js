@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { env } from '../config/env.js';
+import { USER_ROLE_VALUES } from '@your-own/shared';
 
 const userSchema = new mongoose.Schema(
   {
@@ -15,7 +16,12 @@ const userSchema = new mongoose.Schema(
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email address'],
     },
     passwordHash: { type: String, required: true, select: false },
-    role: { type: String, enum: ['admin'], default: 'admin' },
+    // Extended from a single 'admin' role to a 3-tier model:
+    //  - super_admin: full access (branding + analytics + everything admin has)
+    //  - admin: can manage branding & analytics, same as before
+    //  - viewer: read-only, no admin-panel write access
+    // Existing users already stored with role 'admin' are unaffected.
+    role: { type: String, enum: USER_ROLE_VALUES, default: 'admin' },
     isActive: { type: Boolean, default: true },
     lastLoginAt: { type: Date },
     failedLoginAttempts: { type: Number, default: 0 },
