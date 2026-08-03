@@ -49,7 +49,12 @@ export const env = {
   JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
   JWT_REFRESH_EXPIRES_IN_DAYS: Number(process.env.JWT_REFRESH_EXPIRES_IN_DAYS) || 30,
 
-  REFRESH_COOKIE_DOMAIN: process.env.REFRESH_COOKIE_DOMAIN || 'localhost',
+  // Deliberately no 'localhost' fallback: if this is left unset in
+  // production, the cookie should simply omit the Domain attribute (scoping
+  // it to the exact API host) rather than silently setting Domain=localhost,
+  // which browsers reject for any real production host and would break
+  // refresh-token persistence entirely without any visible error.
+  REFRESH_COOKIE_DOMAIN: process.env.REFRESH_COOKIE_DOMAIN || undefined,
 
   BCRYPT_SALT_ROUNDS: Number(process.env.BCRYPT_SALT_ROUNDS) || 12,
 
