@@ -50,8 +50,13 @@ export function ImageUploader({ landId, images, onImagesChange }) {
   };
 
   const handleDelete = async (imageId) => {
-    await deleteLandImage(landId, imageId);
-    onImagesChange(images.filter((img) => img._id !== imageId));
+    setError(null);
+    try {
+      await deleteLandImage(landId, imageId);
+      onImagesChange(images.filter((img) => img._id !== imageId));
+    } catch (err) {
+      setError(err?.response?.data?.error?.message || 'Could not delete this image.');
+    }
   };
 
   const handleDragStart = (index) => {
