@@ -3,12 +3,16 @@ import { Link } from 'react-router-dom';
 export function Footer({ settings }) {
   const siteName = settings?.siteName || 'YOUR OWN';
   const year = new Date().getFullYear();
+  const footerStyle = settings?.colors?.footerColor ? { backgroundColor: settings.colors.footerColor } : undefined;
 
   return (
-    <footer className="border-t border-border bg-surface-alt">
+    <footer className="border-t border-border bg-surface-alt" style={footerStyle}>
       <div className="mx-auto max-w-content px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
           <div>
+            {settings?.footerLogoUrl && (
+              <img src={settings.footerLogoUrl} alt="" className="mb-2 h-8 w-8 object-contain" />
+            )}
             <p className="font-display text-lg text-ink">{siteName}</p>
             <p className="mt-2 max-w-xs text-sm text-ink-soft">
               {settings?.heroSubheadline || 'Carefully verified plots, presented honestly, sold directly.'}
