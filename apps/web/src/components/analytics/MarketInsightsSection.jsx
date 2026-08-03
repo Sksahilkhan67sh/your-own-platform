@@ -26,6 +26,9 @@ export function MarketInsightsSection({ landId }) {
   if (!data) return null;
 
   const hasAnyMarketData = data.lifetimeSold > 0 || data.activeListings > 0;
+  const chartsEnabled = data.visibility?.charts !== false;
+  const chartTypes = data.visibility?.chartTypes || {};
+  const nearbyProperties = data.nearbySoldProperties || [];
 
   return (
     <div className="space-y-6">
@@ -35,27 +38,39 @@ export function MarketInsightsSection({ landId }) {
         <MarketInsightsEmpty />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <ChartPanel title="Monthly Sales">
-              <MonthlySalesChart nearbySoldProperties={data.nearbySoldProperties} />
-            </ChartPanel>
-            <ChartPanel title="Price Trend">
-              <PriceTrendChart nearbySoldProperties={data.nearbySoldProperties} />
-            </ChartPanel>
-            <ChartPanel title="Price Appreciation">
-              <PriceAppreciationChart priceTrend={data.priceTrend} priceGrowth={data.priceGrowth} />
-            </ChartPanel>
-            <ChartPanel title="Sold vs Active">
-              <SoldVsActivePieChart sold1Year={data.sold1Year} activeListings={data.activeListings} />
-            </ChartPanel>
-          </div>
-
-          <div className="rounded-card border border-border bg-surface p-5 shadow-card">
-            <h3 className="font-display text-base text-ink">Nearby Sold Properties</h3>
-            <div className="mt-3">
-              <NearbySoldList properties={data.nearbySoldProperties} />
+          {chartsEnabled && (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {chartTypes.monthly !== false && 'nearbySoldProperties' in data && (
+                <ChartPanel title="Monthly Sales">
+                  <MonthlySalesChart nearbySoldProperties={nearbyProperties} />
+                </ChartPanel>
+              )}
+              {chartTypes.yearly !== false && 'nearbySoldProperties' in data && (
+                <ChartPanel title="Price Trend">
+                  <PriceTrendChart nearbySoldProperties={nearbyProperties} />
+                </ChartPanel>
+              )}
+              {chartTypes.area !== false && 'priceTrend' in data && (
+                <ChartPanel title="Price Appreciation">
+                  <PriceAppreciationChart priceTrend={data.priceTrend} priceGrowth={data.priceGrowth ?? null} />
+                </ChartPanel>
+              )}
+              {chartTypes.pie !== false && 'soldVsActive' in data && 'activeListings' in data && (
+                <ChartPanel title="Sold vs Active">
+                  <SoldVsActivePieChart sold1Year={data.sold1Year ?? 0} activeListings={data.activeListings} />
+                </ChartPanel>
+              )}
             </div>
-          </div>
+          )}
+
+          {'nearbySoldProperties' in data && (
+            <div className="rounded-card border border-border bg-surface p-5 shadow-card">
+              <h3 className="font-display text-base text-ink">Nearby Sold Properties</h3>
+              <div className="mt-3">
+                <NearbySoldList properties={nearbyProperties} />
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
