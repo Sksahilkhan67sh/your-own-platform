@@ -5,12 +5,21 @@ import { s3Client } from '../config/s3.js';
 import { env } from '../config/env.js';
 import { LandImage } from '../models/LandImage.js';
 import { ApiError } from '../utils/ApiError.js';
-import { IMAGE_LIMITS } from '@your-own/shared';
+import { IMAGE_LIMITS, BRANDING_ASSET_LIMITS, BRANDING_ASSET_TYPE_VALUES } from '@your-own/shared';
 
 const PRESIGN_EXPIRY_SECONDS = 5 * 60; // 5 minutes — long enough to start an upload, short enough to limit URL replay window
 
 function extensionFromContentType(contentType) {
-  return { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[contentType] || 'bin';
+  return (
+    {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/svg+xml': 'svg',
+      'image/x-icon': 'ico',
+      'image/vnd.microsoft.icon': 'ico',
+    }[contentType] || 'bin'
+  );
 }
 
 /**
@@ -115,6 +124,68 @@ export async function deleteLandImage(landId, imageId) {
 
   await deleteObjectFromS3(image.storageKey);
   await image.deleteOne();
+}
+
+// ---------------------------------------------------------------------------
+// Branding assets (logos, favicon, login background, OG/Twitter images)
+//
+// Same presign-then-confirm shape as land images above, but not tied to a
+// LandImage document or a per-listing cap: there's exactly one active
+// asset per BRANDING_ASSET_TYPE, stored directly on the Settings singleton
+// by settingsService once the client confirms the upload succeeded.
+// ---------------------------------------------------------------------------
+
+/**
+ * Issues a single presigned PUT URL for a branding asset upload.
+ * Validates type/size server-side (defense in depth — the presigned PUT
+ * itself is not constrained by content-type/length policies here since
+ * branding assets, unlike land images, are uploaded one at a time from a
+ * settings form rather than in a multi-file batch).
+ */
+export async function presignBrandingAsset({ assetType, fileName, contentType, fileSizeBytes }) {
+  if (!BRANDING_ASSET_TYPE_VALUES.includes(assetType)) {
+    throw ApiError.badRequest(`Unknown branding asset type: ${assetType}`);
+  }
+  if (!BRANDING_ASSET_LIMITS.ALLOWED_MIME_TYPES.includes(contentType)) {
+    throw ApiError.badRequest(`Unsupported file type: ${contentType}`);
+  }
+  if (fileSizeBytes > BRANDING_ASSET_LIMITS.MAX_FILE_SIZE_BYTES) {
+    throw ApiError.badRequest(`File too large: ${fileName} (max 5MB)`);
+  }
+
+  const ext = extensionFromContentType(contentType);
+  // Unique filename per upload (never overwrites a previous asset's S3
+  // object, even for the same assetType) — old objects are swept up by
+  // deleteBrandingAsset() once the Settings doc no longer references them.
+  const storageKey = `branding/${assetType}/${randomUUID()}.${ext}`;
+
+  const command = new PutObjectCommand({
+    Bucket: env.S3_BUCKET_NAME,
+    Key: storageKey,
+    ContentType: contentType,
+    ContentLength: fileSizeBytes,
+  });
+
+  const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: PRESIGN_EXPIRY_SECONDS });
+
+  return {
+    assetType,
+    fileName,
+    storageKey,
+    uploadUrl,
+    publicUrl: `${env.S3_PUBLIC_BASE_URL}/${storageKey}`,
+    expiresInSeconds: PRESIGN_EXPIRY_SECONDS,
+  };
+}
+
+/** Deletes a previous branding asset's S3 object. Safe to call with a
+ * blank/undefined key (no-op) since not every asset slot is always set. */
+export async function deleteBrandingAssetByUrl(previousUrl) {
+  if (!previousUrl) return;
+  const prefix = `${env.S3_PUBLIC_BASE_URL}/`;
+  if (!previousUrl.startsWith(prefix)) return; // external/manually-set URL, nothing of ours to delete
+  const storageKey = previousUrl.slice(prefix.length);
+  await deleteObjectFromS3(storageKey).catch(() => null); // best-effort cleanup, never blocks the save
 }
 
 export async function reorderLandImages(landId, order) {
