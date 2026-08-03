@@ -1,6 +1,6 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendSuccess } from '../utils/ApiResponse.js';
-import { getRefreshCookieOptions, REFRESH_COOKIE_NAME } from '../utils/cookies.js';
+import { getRefreshCookieOptions, getClearCookieOptions, REFRESH_COOKIE_NAME } from '../utils/cookies.js';
 import * as authService from '../services/authService.js';
 
 export const login = asyncHandler(async (req, res) => {
@@ -42,7 +42,7 @@ export const logout = asyncHandler(async (req, res) => {
   const incomingToken = req.cookies?.[REFRESH_COOKIE_NAME];
   await authService.logout({ refreshToken: incomingToken });
 
-  res.clearCookie(REFRESH_COOKIE_NAME, { path: '/api/v1/auth' });
+  res.clearCookie(REFRESH_COOKIE_NAME, getClearCookieOptions());
   sendSuccess(res, { data: { loggedOut: true } });
 });
 
