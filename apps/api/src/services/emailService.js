@@ -7,6 +7,19 @@ import { logger } from '../config/logger.js';
  * email must never break the actual business operation (creating an
  * inquiry, updating a deal) that triggered it.
  */
+const HTML_ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
+/**
+ * Escapes a value for safe interpolation into the HTML email templates
+ * below. Listing titles and inquiry message previews originate from
+ * admin/public input and must never be interpolated into HTML unescaped —
+ * doing so would let arbitrary markup (or script, depending on the mail
+ * client) run in whatever inbox renders the notification.
+ */
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => HTML_ESCAPE_MAP[char]);
+}
+
 async function sendEmail({ to, subject, html }) {
   if (!resendClient) {
     logger.warn({ to, subject }, 'Email skipped — Resend not configured');
@@ -44,13 +57,17 @@ function emailLayout(title, bodyHtml) {
  * Notifies the admin when a buyer clicks "Want to Buy" on a listing.
  */
 export async function sendInquiryNotification({ adminEmail, landTitle, landSlug, messagePreview }) {
+  const safeTitle = escapeHtml(landTitle);
+  const safeSlug = escapeHtml(landSlug);
+  const safePreview = escapeHtml(messagePreview);
+
   const html = emailLayout(
     'New buyer inquiry',
     `
       <p>Someone just clicked "Want to Buy" on:</p>
-      <p style="font-weight: bold; color: #2B2620;">${landTitle}</p>
-      ${messagePreview ? `<p style="font-style: italic;">"${messagePreview}"</p>` : ''}
-      <p>Check your WhatsApp for the conversation, or view the listing: ${landSlug}</p>
+      <p style="font-weight: bold; color: #2B2620;">${safeTitle}</p>
+      ${messagePreview ? `<p style="font-style: italic;">"${safePreview}"</p>` : ''}
+      <p>Check your WhatsApp for the conversation, or view the listing: ${safeSlug}</p>
     `
   );
 
@@ -66,11 +83,13 @@ export async function sendInquiryNotification({ adminEmail, landTitle, landSlug,
  */
 export async function sendDealStatusNotification({ adminEmail, landTitle, status, totalCommission }) {
   const statusLabel = { pending_payment: 'pending payment', paid: 'paid', cancelled: 'cancelled' }[status] || status;
+  const safeTitle = escapeHtml(landTitle);
+  const safeStatusLabel = escapeHtml(statusLabel);
 
   const html = emailLayout(
     'Deal status updated',
     `
-      <p>The deal for <strong>${landTitle}</strong> is now marked as <strong>${statusLabel}</strong>.</p>
+      <p>The deal for <strong>${safeTitle}</strong> is now marked as <strong>${safeStatusLabel}</strong>.</p>
       ${totalCommission ? `<p>Total commission: ₹${totalCommission.toLocaleString('en-IN')}</p>` : ''}
     `
   );
