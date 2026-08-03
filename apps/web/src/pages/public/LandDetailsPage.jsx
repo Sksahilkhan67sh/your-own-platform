@@ -3,6 +3,7 @@ import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { Gallery } from '../../components/listing/Gallery.jsx';
 import { WantToBuyButton } from '../../components/listing/WantToBuyButton.jsx';
 import { StickyBuyBar } from '../../components/listing/StickyBuyBar.jsx';
+import { MarketInsightsSection } from '../../components/analytics/MarketInsightsSection.jsx';
 import { StatusBadge } from '../../components/ui/StatusBadge.jsx';
 import { ErrorState } from '../../components/ui/EmptyAndErrorStates.jsx';
 import { Skeleton } from '../../components/ui/Skeleton.jsx';
@@ -105,6 +106,10 @@ export function LandDetailsPage() {
               </div>
             </div>
           )}
+
+          <div className="mt-8">
+            <MarketInsightsSection landId={land._id} />
+          </div>
         </div>
 
         <div className="hidden lg:block">
