@@ -43,3 +43,16 @@ export const inquiryLimiter = rateLimit({
   legacyHeaders: false,
   handler: rateLimitHandler,
 });
+
+/**
+ * Public analytics endpoints run an aggregation pipeline per (uncached)
+ * request — generous enough for a details page + its live-update polling,
+ * but well short of what's needed to use it as a scraping/DoS vector.
+ */
+export const analyticsLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitHandler,
+});
