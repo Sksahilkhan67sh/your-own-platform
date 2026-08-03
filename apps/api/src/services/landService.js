@@ -44,6 +44,38 @@ function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/**
+ * Attaches `coverImageUrl` (the lowest-sortOrder image per listing) to each
+ * land in a list result. Done as a single batched query against LandImage
+ * keyed by land id, rather than one query per land — the documented list
+ * response (see docs/API_REFERENCE.md) includes `coverImageUrl` and the
+ * frontend's ListingCard/dashboard rely on it being present.
+ */
+async function attachCoverImages(items) {
+  if (items.length === 0) return items;
+
+  const landIds = items.map((item) => item._id);
+  const images = await LandImage.find({ land: { $in: landIds } })
+    .sort({ land: 1, sortOrder: 1 })
+    .select('land imageUrl sortOrder')
+    .lean();
+
+  const coverByLandId = new Map();
+  for (const image of images) {
+    const key = image.land.toString();
+    // Images are sorted by sortOrder ascending per land, so the first one
+    // seen for a given land id is its cover image — skip the rest.
+    if (!coverByLandId.has(key)) {
+      coverByLandId.set(key, image.imageUrl);
+    }
+  }
+
+  return items.map((item) => ({
+    ...item,
+    coverImageUrl: coverByLandId.get(item._id.toString()) || null,
+  }));
+}
+
 export async function listLands(filters, { publicOnly }) {
   const query = buildFilterQuery(filters, { publicOnly });
   const sort = SORT_MAP[filters.sort] || SORT_MAP[SORT_OPTIONS.NEWEST];
@@ -51,10 +83,12 @@ export async function listLands(filters, { publicOnly }) {
   const limit = filters.limit || 12;
   const skip = (page - 1) * limit;
 
-  const [items, total] = await Promise.all([
+  const [rawItems, total] = await Promise.all([
     Land.find(query).sort(sort).skip(skip).limit(limit).lean(),
     Land.countDocuments(query),
   ]);
+
+  const items = await attachCoverImages(rawItems);
 
   return { items, meta: { page, limit, total, pages: Math.ceil(total / limit) } };
 }
@@ -65,6 +99,19 @@ export async function getLandBySlugPublic(slug) {
 
   const images = await LandImage.find({ land: land._id }).sort({ sortOrder: 1 }).lean();
   return { ...land, images };
+}
+
+/**
+ * Lightweight lookup used only to validate a publicly-supplied landId (e.g.
+ * from the /inquiries endpoint) and grab the couple of fields needed for a
+ * notification email — without the cost of also loading every image for
+ * that listing, which getLandByIdAdmin does and which is unnecessary here.
+ */
+export async function getPublishedLandSummary(id) {
+  return Land.findOne({ _id: id, publishedAt: { $ne: null } })
+    .select('title slug')
+    .lean()
+    .catch(() => null);
 }
 
 export async function getLandByIdAdmin(id) {
