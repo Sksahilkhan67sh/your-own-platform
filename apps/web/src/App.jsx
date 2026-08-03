@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { useAuthBootstrap } from './hooks/useAuth.js';
 import { ProtectedRoute } from './routes/ProtectedRoute.jsx';
+import { RequireRole } from './routes/RequireRole.jsx';
 
 import { PublicLayout } from './layouts/PublicLayout.jsx';
 import { AdminLayout } from './layouts/AdminLayout.jsx';
@@ -19,6 +20,8 @@ import { AdminLandsListPage } from './pages/admin/AdminLandsListPage.jsx';
 import { AdminLandCreatePage } from './pages/admin/AdminLandCreatePage.jsx';
 import { AdminLandEditPage } from './pages/admin/AdminLandEditPage.jsx';
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage.jsx';
+import { AdminBrandingPage } from './pages/admin/AdminBrandingPage.jsx';
+import { AdminAnalyticsSettingsPage } from './pages/admin/AdminAnalyticsSettingsPage.jsx';
 
 export default function App() {
   // Attempts a silent token refresh on first load so an admin who already
@@ -52,6 +55,22 @@ export default function App() {
         <Route path="lands/new" element={<AdminLandCreatePage />} />
         <Route path="lands/:id/edit" element={<AdminLandEditPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
+        <Route
+          path="branding"
+          element={
+            <RequireRole roles={['admin', 'super_admin']}>
+              <AdminBrandingPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="analytics-settings"
+          element={
+            <RequireRole roles={['admin', 'super_admin']}>
+              <AdminAnalyticsSettingsPage />
+            </RequireRole>
+          }
+        />
       </Route>
     </Routes>
   );
