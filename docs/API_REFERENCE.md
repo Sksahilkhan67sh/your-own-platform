@@ -129,6 +129,62 @@ Rate-limited (default 30/hour/IP). Logs WhatsApp-click intent. Fire-and-forget f
 
 ---
 
+## Land Market Analytics
+
+Public, read-only, rate-limited (60 req/min/IP). Backed by paid `Deal` records within a radius of a point — see `docs/PHASE_1_ARCHITECTURE.md`-style note below on why there's no separate sales table.
+
+> Sales data comes from the existing `Deal` model (a deal with `status: "paid"` *is* a completed sale — it already stores final price, buyer/seller, and a `soldDate` set the moment it's marked paid). Analytics is computed on top of that instead of duplicating it into a new `LandSales` collection.
+
+### `GET /analytics/land/:landId`
+Market analytics for the area around a specific listing.
+
+| Param | Type | Notes |
+|---|---|---|
+| `radius` | number | Kilometers, default `5`, min `0.5`, max `50` |
+
+**Response `200`:**
+```json
+{
+  "success": true,
+  "data": {
+    "sold30Days": 3,
+    "sold1Year": 21,
+    "lifetimeSold": 64,
+    "averagePrice": 4850000,
+    "highestSale": 12600000,
+    "lowestSale": 920000,
+    "averagePricePerSqFt": 2450.5,
+    "priceGrowth": 12.7,
+    "priceTrend": { "priorWindowAvg": 4300000, "recentWindowAvg": 4850000 },
+    "demand": "High",
+    "activeListings": 18,
+    "soldVsActive": 1.17,
+    "lastSaleDate": "2026-07-18T00:00:00.000Z",
+    "nearbySoldProperties": [
+      { "landId": "...", "title": "...", "slug": "...", "city": "...", "state": "...", "latitude": 12.29, "longitude": 76.63, "soldPrice": 4850000, "soldDate": "2026-07-18T00:00:00.000Z" }
+    ]
+  }
+}
+```
+
+Notes:
+- `priceGrowth` and `averagePricePerSqFt` are `null` (not `0`) when there isn't enough sale history to compute them — the UI must distinguish "no data yet" from "0% growth."
+- `averagePricePerSqFt` only averages sales measured in a directly convertible unit (sqft, sqyd, acre, hectare); sales measured in `bigha` are excluded, since bigha's real-world size varies several-fold by state with no fixed conversion.
+- A listing with no `latitude`/`longitude` returns a well-formed response with all counts at `0`/`null`, not an error.
+- Cached in-process for 5 minutes; a deal changing status invalidates the cache for its listing immediately.
+- **Errors:** `404 NOT_FOUND` if the listing doesn't exist, `422 VALIDATION_ERROR` for a bad `radius`.
+
+### `GET /analytics/location`
+Same response shape as above, for an arbitrary point instead of a listing.
+
+| Param | Type | Notes |
+|---|---|---|
+| `latitude` | number | Required, `-90`–`90` |
+| `longitude` | number | Required, `-180`–`180` |
+| `radius` | number | Kilometers, default `5`, min `0.5`, max `50` |
+
+---
+
 ## Admin — Listings
 
 All endpoints below require `Authorization: Bearer <accessToken>` with role `admin`.
