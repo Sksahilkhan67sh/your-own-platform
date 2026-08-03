@@ -314,6 +314,122 @@ Upserts the settings singleton.
 
 ---
 
+## Admin — Branding
+
+Requires `admin` or `super_admin`. Branding lives on the same `Settings` singleton as
+`/admin/settings` above — `/admin/branding` is a dedicated view/write path over the branding
+subset of the same document, so a change through either endpoint is immediately visible on the
+other.
+
+### `GET /admin/branding`
+Returns the full settings document.
+
+### `PUT /admin/branding`
+Same body shape as `PUT /admin/settings`, plus the branding fields below. All fields optional
+except `defaultWhatsappNumber`.
+
+```json
+{
+  "websiteTitle": "My Property Portal",
+  "navbarLogoUrl": "https://cdn.../branding/navbarLogo/....png",
+  "sidebarLogoUrl": "",
+  "footerLogoUrl": "",
+  "loginLogoUrl": "",
+  "faviconUrl": "",
+  "metaTitle": "My Property Portal — Land Listings",
+  "metaDescription": "...",
+  "metaKeywords": "land, plots, real estate",
+  "ogImageUrl": "",
+  "twitterImageUrl": "",
+  "loginBackgroundUrl": "",
+  "loginWelcomeHeading": "Welcome back",
+  "loginWelcomeDescription": "Sign in to manage listings.",
+  "colors": {
+    "primaryColor": "#44574A",
+    "secondaryColor": "#EFE9DD",
+    "accentColor": "#44574A",
+    "buttonColor": "#44574A",
+    "navbarColor": "#FFFFFF",
+    "footerColor": "#2B2620",
+    "sidebarColor": "#F1ECE1",
+    "backgroundColor": "#F7F4EE",
+    "textColor": "#2B2620"
+  }
+}
+```
+
+### `POST /admin/branding/upload/presign`
+Issues a presigned S3 PUT URL for a branding asset. The browser uploads the file bytes directly to
+S3 (same pattern as land image uploads) — no image bytes pass through the API.
+
+**Body:** `{ "assetType": "navbarLogo", "fileName": "logo.png", "contentType": "image/png", "fileSizeBytes": 45210 }`
+`assetType` is one of: `logo`, `navbarLogo`, `sidebarLogo`, `loginLogo`, `footerLogo`, `favicon`,
+`loginBackground`, `ogImage`, `twitterImage`. Max 5MB; PNG/SVG/JPG/ICO/WEBP only.
+
+**Response:** `{ "assetType", "fileName", "storageKey", "uploadUrl", "publicUrl", "expiresInSeconds" }`
+
+### `POST /admin/branding/upload/confirm`
+Call after the browser's PUT to `uploadUrl` succeeds. Persists the asset's URL onto the matching
+Settings field and best-effort deletes the previous asset of that type from S3.
+
+**Body:** `{ "assetType": "navbarLogo", "storageKey": "branding/navbarLogo/....png", "publicUrl": "https://cdn.../branding/navbarLogo/....png" }`
+
+---
+
+## Admin — Analytics Management
+
+Requires `admin` or `super_admin`. Controls what `/analytics/land/:landId` and
+`/analytics/location` return to viewers — hidden fields are omitted from the response entirely,
+not just nulled out.
+
+### `GET /admin/analytics/settings`
+Returns the analytics settings singleton (auto-created with all panels visible and live data on
+first read — no seed step required).
+
+### `PUT /admin/analytics/settings`
+**Body (all fields optional):**
+```json
+{
+  "showMonthlySales": true,
+  "showYearlySales": true,
+  "showLifetimeSales": true,
+  "showAveragePrice": true,
+  "showHighestPrice": true,
+  "showLowestPrice": true,
+  "showGrowth": true,
+  "showNearbySales": true,
+  "showDemand": true,
+  "showInvestmentScore": true,
+  "showActiveListings": true,
+  "showSoldVsActiveRatio": true,
+  "showCharts": true,
+  "showHeatmap": true,
+  "manualMode": false,
+  "manualMonthlySales": null,
+  "manualYearlySales": null,
+  "manualLifetimeSales": null,
+  "manualAveragePrice": null,
+  "manualHighestPrice": null,
+  "manualLowestPrice": null,
+  "manualGrowth": null,
+  "manualDemand": "",
+  "manualInvestmentScore": null,
+  "manualNearbySales": null,
+  "growthUseManual": false,
+  "demandFormula": [
+    { "max": 100, "label": "Low" },
+    { "max": 300, "label": "Medium" },
+    { "max": 700, "label": "High" },
+    { "max": null, "label": "Very High" }
+  ],
+  "chartTypes": { "monthly": true, "yearly": true, "pie": true, "bar": true, "area": true }
+}
+```
+`demandFormula` tiers are matched in ascending `max` order; a tier with `max: null` catches any
+score above every bounded tier ("and above").
+
+---
+
 ## Postman collection
 
 A ready-to-import Postman collection covering every endpoint above is at
