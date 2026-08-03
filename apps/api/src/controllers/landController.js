@@ -24,8 +24,10 @@ export const createInquiry = asyncHandler(async (req, res) => {
 
   // Verify the land actually exists and is publicly visible before logging
   // an inquiry against it — never trust a client-supplied landId blindly.
-  const land = await landService.getLandByIdAdmin(landId).catch(() => null);
-  if (!land || !land.land.publishedAt) {
+  // Uses a lightweight summary lookup (title/slug only) rather than the
+  // full admin fetch, since we don't need this listing's images here.
+  const land = await landService.getPublishedLandSummary(landId);
+  if (!land) {
     throw ApiError.notFound('Listing not found');
   }
 
@@ -39,8 +41,8 @@ export const createInquiry = asyncHandler(async (req, res) => {
       if (settings.contactEmail) {
         sendInquiryNotification({
           adminEmail: settings.contactEmail,
-          landTitle: land.land.title,
-          landSlug: land.land.slug,
+          landTitle: land.title,
+          landSlug: land.slug,
           messagePreview,
         });
       }
