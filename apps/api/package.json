@@ -8,6 +8,7 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "seed": "node seed.js",
+    "backfill:analytics": "node scripts/backfillAnalyticsFields.js",
     "lint": "eslint src --ext .js",
     "test": "node --experimental-test-module-mocks --test \"tests/**/*.test.js\""
   },
