@@ -1,6 +1,7 @@
 import { Deal } from '../models/Deal.js';
 import { Land } from '../models/Land.js';
 import { ApiError } from '../utils/ApiError.js';
+import { invalidateAnalyticsForLand } from './analytics/analyticsService.js';
 
 const DEFAULT_COMMISSION_RATE = 2;
 
@@ -59,10 +60,17 @@ export async function updateDeal(id, payload) {
   const deal = await Deal.findById(id);
   if (!deal) throw ApiError.notFound('Deal not found');
 
+  const statusChanged = payload.status !== undefined && payload.status !== deal.status;
+
   if (payload.status !== undefined) deal.status = payload.status;
   if (payload.notes !== undefined) deal.notes = payload.notes;
 
   await deal.save();
+
+  if (statusChanged) {
+    invalidateAnalyticsForLand(deal.land.toString());
+  }
+
   return populateDeal(deal._id);
 }
 
