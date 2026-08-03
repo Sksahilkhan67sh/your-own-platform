@@ -33,18 +33,23 @@ export function AdminSettingsPage() {
   } = useForm({ resolver: zodResolver(settingsFormSchema) });
 
   useEffect(() => {
-    fetchAdminSettings().then((settings) => {
-      reset({
-        siteName: settings.siteName,
-        defaultWhatsappNumber: settings.defaultWhatsappNumber,
-        contactEmail: settings.contactEmail || '',
-        heroHeadline: settings.heroHeadline || '',
-        heroSubheadline: settings.heroSubheadline || '',
-        instagram: settings.socialLinks?.instagram || '',
-        facebook: settings.socialLinks?.facebook || '',
+    fetchAdminSettings()
+      .then((settings) => {
+        reset({
+          siteName: settings.siteName,
+          defaultWhatsappNumber: settings.defaultWhatsappNumber,
+          contactEmail: settings.contactEmail || '',
+          heroHeadline: settings.heroHeadline || '',
+          heroSubheadline: settings.heroSubheadline || '',
+          instagram: settings.socialLinks?.instagram || '',
+          facebook: settings.socialLinks?.facebook || '',
+        });
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setServerError('Could not load settings. Try refreshing the page.');
+        setIsLoading(false);
       });
-      setIsLoading(false);
-    });
   }, [reset]);
 
   const onSubmit = async (values) => {
