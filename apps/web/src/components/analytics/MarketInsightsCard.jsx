@@ -53,8 +53,10 @@ export function MarketInsightsEmpty() {
  * legitimate, expected state, not an error.
  */
 export function MarketInsightsCard({ data }) {
+  const has = (key) => Object.prototype.hasOwnProperty.call(data, key);
+
   const priceGrowthLabel =
-    data.priceGrowth === null
+    data.priceGrowth === null || data.priceGrowth === undefined
       ? 'Not enough history'
       : `${data.priceGrowth > 0 ? '+' : ''}${data.priceGrowth}%`;
 
@@ -66,23 +68,32 @@ export function MarketInsightsCard({ data }) {
       <p className="mt-1 text-sm text-ink-soft">Based on sales within a 5&nbsp;km radius of this listing.</p>
 
       <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
-        <Stat label="Sold Last 30 Days" value={data.sold30Days} />
-        <Stat label="Sold Last Year" value={data.sold1Year} />
-        <Stat label="Lifetime Sales" value={data.lifetimeSold} />
+        {has('sold30Days') && <Stat label="Sold Last 30 Days" value={data.sold30Days} />}
+        {has('sold1Year') && <Stat label="Sold Last Year" value={data.sold1Year} />}
+        {has('lifetimeSold') && <Stat label="Lifetime Sales" value={data.lifetimeSold} />}
 
-        <Stat label="Avg Sale Price" value={formatCompactPrice(data.averagePrice)} />
-        <Stat label="Highest Sale" value={formatCompactPrice(data.highestSale)} />
-        <Stat label="Lowest Sale" value={formatCompactPrice(data.lowestSale)} />
+        {has('averagePrice') && <Stat label="Avg Sale Price" value={formatCompactPrice(data.averagePrice)} />}
+        {has('highestSale') && <Stat label="Highest Sale" value={formatCompactPrice(data.highestSale)} />}
+        {has('lowestSale') && <Stat label="Lowest Sale" value={formatCompactPrice(data.lowestSale)} />}
 
-        <Stat label="Avg Price / Sq.Ft" value={data.averagePricePerSqFt ? `₹${data.averagePricePerSqFt}` : '—'} />
-        <Stat
-          label="Price Growth"
-          value={<span className={data.priceGrowth > 0 ? 'text-status-available' : data.priceGrowth < 0 ? 'text-danger' : ''}>{priceGrowthLabel}</span>}
-        />
-        <Stat label="Demand" value={<span className={demandClass}>{data.demand}</span>} />
+        {has('averagePricePerSqFt') && (
+          <Stat label="Avg Price / Sq.Ft" value={data.averagePricePerSqFt ? `₹${data.averagePricePerSqFt}` : '—'} />
+        )}
+        {has('priceGrowth') && (
+          <Stat
+            label="Price Growth"
+            value={
+              <span className={data.priceGrowth > 0 ? 'text-status-available' : data.priceGrowth < 0 ? 'text-danger' : ''}>
+                {priceGrowthLabel}
+              </span>
+            }
+          />
+        )}
+        {has('demand') && <Stat label="Demand" value={<span className={demandClass}>{data.demand}</span>} />}
+        {has('investmentScore') && <Stat label="Investment Score" value={data.investmentScore ?? '—'} />}
 
-        <Stat label="Active Listings" value={data.activeListings} />
-        <Stat label="Sold / Active" value={data.soldVsActive ?? '—'} />
+        {has('activeListings') && <Stat label="Active Listings" value={data.activeListings} />}
+        {has('soldVsActive') && <Stat label="Sold / Active" value={data.soldVsActive ?? '—'} />}
         <Stat label="Last Sale" value={formatDate(data.lastSaleDate)} />
       </dl>
     </div>
