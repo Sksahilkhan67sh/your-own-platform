@@ -17,21 +17,30 @@ export function AdminLandsListPage() {
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const debouncedSearch = useDebouncedValue(searchInput, 400);
 
   const load = async () => {
     setIsLoading(true);
-    const res = await fetchAdminLands({
-      q: debouncedSearch || undefined,
-      status: statusFilter || undefined,
-      page,
-      limit: 10,
-    });
-    setItems(res.data);
-    setMeta(res.meta);
-    setIsLoading(false);
+    setLoadError(null);
+    try {
+      const res = await fetchAdminLands({
+        q: debouncedSearch || undefined,
+        status: statusFilter || undefined,
+        page,
+        limit: 10,
+      });
+      setItems(res.data);
+      setMeta(res.meta);
+    } catch (err) {
+      setLoadError(err?.response?.data?.error?.message || 'Could not load listings.');
+      setItems([]);
+      setMeta(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -40,9 +49,14 @@ export function AdminLandsListPage() {
   }, [debouncedSearch, statusFilter, page]);
 
   const handleDelete = async (id) => {
-    await deleteLand(id);
-    setPendingDeleteId(null);
-    load();
+    try {
+      await deleteLand(id);
+      setPendingDeleteId(null);
+      load();
+    } catch (err) {
+      setLoadError(err?.response?.data?.error?.message || 'Could not delete this listing.');
+      setPendingDeleteId(null);
+    }
   };
 
   return (
@@ -80,6 +94,8 @@ export function AdminLandsListPage() {
           </Select>
         </div>
       </div>
+
+      {loadError && <p role="alert" className="mt-4 text-sm text-danger">{loadError}</p>}
 
       <div className="mt-6 overflow-hidden rounded-card border border-border bg-surface">
         {isLoading ? (
