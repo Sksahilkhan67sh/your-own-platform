@@ -22,6 +22,15 @@ const landSchema = new mongoose.Schema(
     latitude: { type: Number, min: -90, max: 90 },
     longitude: { type: Number, min: -180, max: 180 },
 
+    // GeoJSON mirror of latitude/longitude, kept in sync via the pre-save
+    // hook below. Lets analyticsRepository run real $geoNear/$near queries
+    // ("nearby sold properties") instead of scanning every listing and
+    // computing haversine distance in application code.
+    location: {
+      type: { type: String, enum: ['Point'] },
+      coordinates: { type: [Number] }, // [lng, lat]
+    },
+
     status: { type: String, enum: LAND_STATUS_VALUES, default: 'available', index: true },
     featured: { type: Boolean, default: false, index: true },
 
@@ -59,5 +68,21 @@ landSchema.index({ price: 1 });
 landSchema.index({ areaValue: 1 });
 // Free-text search box
 landSchema.index({ title: 'text', description: 'text', city: 'text' });
+// Nearby-sold / location analytics queries (Land Market Analytics feature)
+landSchema.index({ location: '2dsphere' });
+
+// Keeps the GeoJSON `location` field in sync whenever latitude/longitude
+// are set or changed, so callers only ever need to think about lat/lng —
+// the geospatial-query shape is an internal implementation detail.
+landSchema.pre('save', function syncGeoLocation(next) {
+  if (this.isModified('latitude') || this.isModified('longitude')) {
+    if (typeof this.latitude === 'number' && typeof this.longitude === 'number') {
+      this.location = { type: 'Point', coordinates: [this.longitude, this.latitude] };
+    } else {
+      this.location = undefined;
+    }
+  }
+  next();
+});
 
 export const Land = mongoose.model('Land', landSchema);
