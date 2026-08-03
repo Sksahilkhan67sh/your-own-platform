@@ -24,6 +24,14 @@ const dealSchema = new mongoose.Schema(
       index: true,
     },
 
+    // Set automatically the first time a deal transitions to 'paid' (see
+    // the pre-save hook below). This is the single source of truth for
+    // "when did this land actually sell" — Land Market Analytics reads
+    // paid deals as the historical sales record instead of a separate
+    // sales table, since a Deal already *is* an immutable sale record
+    // once paid (deals are never deleted after payment in normal use).
+    soldDate: { type: Date },
+
     notes: { type: String, maxlength: 1000, default: '' },
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -32,5 +40,15 @@ const dealSchema = new mongoose.Schema(
 );
 
 dealSchema.index({ createdAt: -1 });
+// Land Market Analytics: date-range and per-listing sales lookups.
+dealSchema.index({ status: 1, soldDate: -1 });
+dealSchema.index({ land: 1, status: 1 });
+
+dealSchema.pre('save', function setSoldDateOnPaid(next) {
+  if (this.isModified('status') && this.status === 'paid' && !this.soldDate) {
+    this.soldDate = new Date();
+  }
+  next();
+});
 
 export const Deal = mongoose.model('Deal', dealSchema);
