@@ -12,7 +12,7 @@ import * as dealController from '../../controllers/dealController.js';
 const router = Router();
 
 // Every route here requires a valid admin session — deals are 100% internal.
-router.use(requireAuth, requireRole('admin'));
+router.use(requireAuth, requireRole('admin', 'super_admin'));
 
 router.get('/summary', dealController.getCommissionSummary);
 router.get('/', validate(dealListQuerySchema), dealController.listDeals);
