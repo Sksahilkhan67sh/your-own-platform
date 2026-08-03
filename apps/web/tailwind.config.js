@@ -4,16 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        surface: '#F7F4EE',
-        'surface-alt': '#EFE9DD',
-        ink: '#2B2620',
-        'ink-soft': '#5C5448',
+        surface: 'var(--color-surface, #F7F4EE)',
+        'surface-alt': 'var(--color-surface-alt, #EFE9DD)',
+        ink: 'var(--color-ink, #2B2620)',
+        'ink-soft': 'var(--color-ink-soft, #5C5448)',
         accent: {
-          DEFAULT: '#44574A',
-          hover: '#36463B',
-          soft: '#DCE5DD',
+          DEFAULT: 'var(--color-accent, #44574A)',
+          hover: 'var(--color-accent-hover, #36463B)',
+          soft: 'var(--color-accent-soft, #DCE5DD)',
         },
-        border: '#DDD5C5',
+        border: 'var(--color-border, #DDD5C5)',
         danger: '#8C3D2E',
         status: {
           available: '#44574A',
