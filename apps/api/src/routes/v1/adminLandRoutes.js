@@ -16,7 +16,7 @@ import * as landController from '../../controllers/landController.js';
 const router = Router();
 
 // Every route below requires a valid admin session.
-router.use(requireAuth, requireRole('admin'));
+router.use(requireAuth, requireRole('admin', 'super_admin'));
 
 router.get('/', validate(adminLandQuerySchema), landController.listAdminLands);
 router.post('/', validate(createLandSchema), landController.createLand);
