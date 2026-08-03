@@ -13,10 +13,25 @@ export function getRefreshCookieOptions(maxAgeMs) {
     httpOnly: true,
     secure: env.isProduction,
     sameSite: env.isProduction ? 'none' : 'lax',
-    domain: env.isProduction ? env.REFRESH_COOKIE_DOMAIN : undefined,
+    // Only set Domain when explicitly configured — omitting it scopes the
+    // cookie to the exact host that set it, which is correct for the
+    // common case of one API host with no subdomain-sharing requirement,
+    // and avoids ever emitting a Domain the browser will reject.
+    domain: env.REFRESH_COOKIE_DOMAIN,
     path: '/api/v1/auth',
     maxAge: maxAgeMs,
   };
+}
+
+/**
+ * Options used to clear the refresh cookie on logout. Must mirror the
+ * path/domain/secure/sameSite used when the cookie was set — browsers only
+ * recognize a clear (Max-Age=0) as targeting the same cookie if these
+ * attributes match, otherwise the stale cookie is left behind client-side.
+ */
+export function getClearCookieOptions() {
+  const { httpOnly, secure, sameSite, domain, path } = getRefreshCookieOptions(0);
+  return { httpOnly, secure, sameSite, domain, path };
 }
 
 export const REFRESH_COOKIE_NAME = 'your_own_rt';
